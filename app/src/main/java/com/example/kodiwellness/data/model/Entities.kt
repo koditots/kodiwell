@@ -6,23 +6,24 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "users")
 data class UserEntity(
     @PrimaryKey val id: Int = 1,
-    val fullName: String = "John Doe",
-    val email: String = "john.doe@example.com",
-    val phone: String = "+1 (555) 234-5678",
-    val dateOfBirth: String = "1988-06-15",
-    val gender: String = "Male",
+    val fullName: String = "",
+    val email: String = "",
+    val photoUrl: String = "",
+    val phone: String = "",
+    val dateOfBirth: String = "",
+    val gender: String = "Prefer not to say",
     val bloodGroup: String = "O+",
-    val heightCm: Float = 178f,
-    val weightKg: Float = 74.5f,
-    val emergencyContactName: String = "Sarah Doe",
-    val emergencyContactPhone: String = "+1 (555) 987-6543",
-    val emergencyRelationship: String = "Spouse",
-    val allergies: String = "Penicillin, Peanuts",
-    val medicalConditions: String = "Mild Seasonal Asthma, Hypertension (controlled)",
-    val primaryDoctor: String = "Dr. Robert Vance, MD",
-    val organDonor: Boolean = true,
-    val focusAreas: String = "Medication, Hydration, Sleep, General Wellness",
-    val isOnboarded: Boolean = true
+    val heightCm: Float = 175f,
+    val weightKg: Float = 70.0f,
+    val emergencyContactName: String = "",
+    val emergencyContactPhone: String = "",
+    val emergencyRelationship: String = "",
+    val allergies: String = "None known",
+    val medicalConditions: String = "None reported",
+    val primaryDoctor: String = "",
+    val organDonor: Boolean = false,
+    val focusAreas: String = "General Wellness, Medication, Hydration, Sleep",
+    val isOnboarded: Boolean = false
 )
 
 @Entity(tableName = "insurance_info")

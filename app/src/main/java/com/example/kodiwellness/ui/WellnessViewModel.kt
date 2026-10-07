@@ -7,19 +7,87 @@ import com.example.kodiwellness.data.local.AppDatabase
 import com.example.kodiwellness.data.model.*
 import com.example.kodiwellness.data.repository.WellnessRepository
 import com.example.kodiwellness.notifications.NotificationHelper
+import com.example.kodiwellness.update.AppReleaseInfo
+import com.example.kodiwellness.update.GitHubUpdateManager
+import com.example.kodiwellness.update.UpdateStatus
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
 
 class WellnessViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: WellnessRepository
     private val todayStr: String
+    val updateManager = GitHubUpdateManager(application)
+
+    val updateStatus: StateFlow<UpdateStatus> = updateManager.updateStatus
+    private val _currentGitHubRepo = MutableStateFlow(updateManager.getRepository())
+    val currentGitHubRepo: StateFlow<String> = _currentGitHubRepo.asStateFlow()
 
     init {
         val db = AppDatabase.getDatabase(application)
         repository = WellnessRepository(db.wellnessDao())
         todayStr = repository.getTodayString()
         NotificationHelper.createNotificationChannels(application)
+
+        // Sync with currently authenticated Google Firebase user
+        syncFirebaseUser()
+
+        // Automatically check for GitHub updates in background on app startup
+        viewModelScope.launch {
+            updateManager.checkForUpdates(manual = false)
+        }
+    }
+
+    /**
+     * Synchronizes current Google account credentials from Firebase Auth with local Room DB
+     * and Firestore cloud database, ensuring the user's real name and details address them everywhere.
+     */
+    fun syncFirebaseUser() {
+        val fbUser = com.google.firebase.Firebase.auth.currentUser ?: return
+        viewModelScope.launch {
+            val existing = repository.user.firstOrNull()
+            val googleName = fbUser.displayName?.trim().orEmpty()
+            val googleEmail = fbUser.email?.trim().orEmpty()
+            val googlePhoto = fbUser.photoUrl?.toString().orEmpty()
+
+            val updatedUser = if (existing == null) {
+                UserEntity(
+                    id = 1,
+                    fullName = googleName.ifBlank { "User" },
+                    email = googleEmail,
+                    photoUrl = googlePhoto,
+                    isOnboarded = googleName.isNotBlank()
+                )
+            } else {
+                existing.copy(
+                    fullName = if (existing.fullName.isBlank() || existing.fullName == "John Doe") {
+                        googleName.ifBlank { "User" }
+                    } else existing.fullName,
+                    email = if (existing.email.isBlank() || existing.email.contains("example.com") || existing.email.contains("wellness.org")) {
+                        googleEmail.ifBlank { existing.email }
+                    } else existing.email,
+                    photoUrl = if (existing.photoUrl.isBlank()) googlePhoto else existing.photoUrl
+                )
+            }
+            repository.saveUser(updatedUser)
+
+            // Sync with Firestore profile in background
+            try {
+                val firestoreRepo = com.example.kodiwellness.data.firestore.FirestoreHealthRepository(getApplication())
+                firestoreRepo.saveUserProfile(
+                    com.example.kodiwellness.data.firestore.FirestoreUserProfile(
+                        userId = fbUser.uid,
+                        displayName = updatedUser.fullName,
+                        email = updatedUser.email
+                    )
+                )
+            } catch (e: Exception) {
+                android.util.Log.w("WellnessVM", "Firestore profile sync note: ${e.message}")
+            }
+        }
     }
 
     // State flows
@@ -402,5 +470,63 @@ class WellnessViewModel(application: Application) : AndroidViewModel(application
                 _isAiThinking.value = false
             }
         }
+    }
+
+    // GitHub In-App Updater Operations
+    fun checkForUpdates(manual: Boolean = true) {
+        viewModelScope.launch {
+            val result = updateManager.checkForUpdates(manual = manual)
+            if (manual) {
+                when (result) {
+                    is UpdateStatus.UpToDate -> {
+                        _snackbarMessage.value = "You are on the latest production release (v${result.currentVersion})."
+                    }
+                    is UpdateStatus.UpdateAvailable -> {
+                        _snackbarMessage.value = "New production update found: v${result.release.versionName}!"
+                    }
+                    is UpdateStatus.Error -> {
+                        _snackbarMessage.value = "Update check failed: ${result.message}"
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    fun downloadUpdate(release: AppReleaseInfo) {
+        viewModelScope.launch {
+            val downloadResult = updateManager.downloadUpdate(release) { progress, downloaded, total ->
+                // Progress updated inside manager StateFlow
+            }
+            if (downloadResult.isSuccess) {
+                val file = downloadResult.getOrThrow()
+                _snackbarMessage.value = "Update v${release.versionName} downloaded! Tap to install."
+                updateManager.installUpdate(file)
+            } else {
+                _snackbarMessage.value = "Download failed: ${downloadResult.exceptionOrNull()?.message}"
+            }
+        }
+    }
+
+    fun installDownloadedUpdate(file: File) {
+        val success = updateManager.installUpdate(file)
+        if (!success) {
+            _snackbarMessage.value = "Please grant permission to install updates from Kodi Wellness in Settings."
+        }
+    }
+
+    fun openUpdateInBrowser(url: String) {
+        updateManager.openInBrowser(url)
+    }
+
+    fun setGitHubRepo(repo: String) {
+        updateManager.setRepository(repo)
+        _currentGitHubRepo.value = updateManager.getRepository()
+        _snackbarMessage.value = "Connected repository updated to: ${_currentGitHubRepo.value}"
+        checkForUpdates(manual = true)
+    }
+
+    fun dismissUpdatePrompt() {
+        updateManager.dismissUpdate()
     }
 }

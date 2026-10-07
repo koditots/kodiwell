@@ -70,29 +70,8 @@ abstract class AppDatabase : RoomDatabase() {
             private suspend fun populateInitialSampleData(dao: WellnessDao) {
                 val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
-                // 1. Initial User
-                dao.insertOrUpdateUser(
-                    UserEntity(
-                        id = 1,
-                        fullName = "John Doe",
-                        email = "john.doe@wellness.org",
-                        phone = "+1 (555) 234-5678",
-                        dateOfBirth = "1988-06-15",
-                        gender = "Male",
-                        bloodGroup = "O+",
-                        heightCm = 178f,
-                        weightKg = 74.5f,
-                        emergencyContactName = "Sarah Doe",
-                        emergencyContactPhone = "+1 (555) 987-6543",
-                        emergencyRelationship = "Spouse",
-                        allergies = "Penicillin, Peanuts",
-                        medicalConditions = "Mild Seasonal Asthma, Hypertension (controlled)",
-                        primaryDoctor = "Dr. Robert Vance, MD",
-                        organDonor = true,
-                        focusAreas = "Medication, Hydration, Sleep, General Wellness",
-                        isOnboarded = true
-                    )
-                )
+                // 1. Initial User will be created dynamically when user registers or signs in with Google
+
 
                 // 2. Health Insurance Information
                 dao.insertOrUpdateInsurance(
@@ -410,7 +389,7 @@ abstract class AppDatabase : RoomDatabase() {
                 dao.insertChatMessage(
                     ChatMessageEntity(
                         role = "model",
-                        content = "Hello John! I'm **Wellness AI**, your personal medical assistance and wellness planning companion.\n\n" +
+                        content = "Hello! I'm **Wellness AI**, your personal medical assistance and wellness planning companion.\n\n" +
                                 "I can help you build daily healthy routines, understand wellness habits, review symptom correlations, and suggest personalized wellness plans.\n\n" +
                                 "*Disclaimer: Wellness AI provides general health and wellness information and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified physician for medical concerns.*",
                         timestamp = System.currentTimeMillis()

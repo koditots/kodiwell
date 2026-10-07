@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with health insurance details",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "insuranceProvider": { "type": "string" },
+        "policyNumber": { "type": "string" },
+        "groupNumber": { "type": "string" },
+        "insuranceContact": { "type": "string" },
+        "subscriberName": { "type": "string" },
+        "planType": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId"]
+    },
+    "SymptomLog": {
+      "title": "SymptomLog",
+      "description": "Daily logged symptom entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "symptom": { "type": "string" },
+        "severity": { "type": "number" },
+        "notes": { "type": "string" },
+        "triggers": { "type": "string" },
+        "loggedAt": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "symptom", "severity"]
+    },
+    "Medication": {
+      "title": "Medication",
+      "description": "Medication prescription or schedule",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "dosage": { "type": "string" },
+        "frequency": { "type": "string" },
+        "timesPerDay": { "type": "number" },
+        "instructions": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "dosage"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile and insurance credentials"
+    },
+    "/users/{userId}/symptoms/{symptomId}": {
+      "schema": "SymptomLog",
+      "description": "User symptom entries"
+    },
+    "/users/{userId}/medications/{medicationId}": {
+      "schema": "Medication",
+      "description": "User medication entries"
+    }
+  }
+}

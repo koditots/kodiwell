@@ -288,8 +288,11 @@ class WellnessRepository(
         val history = (dao.getAllChatMessages().firstOrNull() ?: emptyList())
             .map { it.role to it.content }
 
+        val currentUser = dao.getUser().firstOrNull()
+        val userName = currentUser?.fullName?.takeIf { it.isNotBlank() && it != "John Doe" } ?: ""
+
         // Generate response
-        val (responseContent, isEmergency) = geminiService.generateChatResponse(userText, history)
+        val (responseContent, isEmergency) = geminiService.generateChatResponse(userText, history, userName)
 
         // Save AI message
         dao.insertChatMessage(

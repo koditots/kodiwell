@@ -30,6 +30,8 @@ import com.example.R
 import com.example.kodiwellness.data.model.*
 import com.example.kodiwellness.ui.WellnessViewModel
 import com.example.ui.theme.*
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,8 +101,18 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
+                                val fbUser = com.google.firebase.Firebase.auth.currentUser
+                                val greetingName = user?.fullName?.trim()?.takeIf { it.isNotBlank() && it != "John Doe" }
+                                    ?: fbUser?.displayName?.trim()?.takeIf { it.isNotBlank() }
+                                    ?: "Welcome"
+                                val displayGreeting = if (greetingName == "Welcome") {
+                                    "$greeting!"
+                                } else {
+                                    "$greeting, ${greetingName.split(" ").firstOrNull() ?: greetingName}"
+                                }
+
                                 Text(
-                                    text = "$greeting, ${user?.fullName?.split(" ")?.firstOrNull() ?: "Friend"}",
+                                    text = displayGreeting,
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer

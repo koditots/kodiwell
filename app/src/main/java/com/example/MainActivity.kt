@@ -20,9 +20,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kodiwellness.ui.WellnessViewModel
+import com.example.kodiwellness.ui.components.UpdatePromptDialog
 import com.example.kodiwellness.ui.navigation.Screen
 import com.example.kodiwellness.ui.screens.*
+import com.example.kodiwellness.update.UpdateStatus
 import com.example.ui.theme.KodiWellnessTheme
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.auth
 
 class MainActivity : ComponentActivity() {
 
@@ -33,9 +39,38 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KodiWellnessTheme {
-                MainAppContent(viewModel)
+                AppGate(viewModel)
             }
         }
+    }
+}
+
+@Composable
+fun AppGate(viewModel: WellnessViewModel) {
+    var currentUser by remember { mutableStateOf<FirebaseUser?>(Firebase.auth.currentUser) }
+
+    DisposableEffect(Unit) {
+        val listener = FirebaseAuth.AuthStateListener { auth ->
+            currentUser = auth.currentUser
+            if (auth.currentUser != null) {
+                viewModel.syncFirebaseUser()
+            }
+        }
+        Firebase.auth.addAuthStateListener(listener)
+        onDispose {
+            Firebase.auth.removeAuthStateListener(listener)
+        }
+    }
+
+    if (currentUser == null) {
+        SignInScreen(
+            onAuthSuccess = {
+                currentUser = Firebase.auth.currentUser
+                viewModel.syncFirebaseUser()
+            }
+        )
+    } else {
+        MainAppContent(viewModel)
     }
 }
 
@@ -44,6 +79,8 @@ fun MainAppContent(viewModel: WellnessViewModel) {
     val user by viewModel.user.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarMsg by viewModel.snackbarMessage.collectAsState()
+    val updateStatus by viewModel.updateStatus.collectAsState()
+    var userDismissedUpdateDialog by remember { mutableStateOf(false) }
 
     var currentScreen by remember { mutableStateOf<String>(Screen.Splash.route) }
 
@@ -59,6 +96,24 @@ fun MainAppContent(viewModel: WellnessViewModel) {
             snackbarHostState.showSnackbar(msg)
             viewModel.clearSnackbar()
         }
+    }
+
+    // Auto-prompt when an update is available or downloading/ready
+    if (!userDismissedUpdateDialog && (updateStatus is UpdateStatus.UpdateAvailable || updateStatus is UpdateStatus.Downloading || updateStatus is UpdateStatus.ReadyToInstall)) {
+        UpdatePromptDialog(
+            status = updateStatus,
+            onDownload = { release -> viewModel.downloadUpdate(release) },
+            onInstall = {
+                (updateStatus as? UpdateStatus.ReadyToInstall)?.let {
+                    viewModel.installDownloadedUpdate(it.apkFile)
+                }
+            },
+            onOpenBrowser = { url -> viewModel.openUpdateInBrowser(url) },
+            onDismiss = {
+                userDismissedUpdateDialog = true
+                viewModel.dismissUpdatePrompt()
+            }
+        )
     }
 
     // Handle back button when in a subscreen

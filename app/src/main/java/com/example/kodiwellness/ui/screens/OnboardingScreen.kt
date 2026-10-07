@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.kodiwellness.ui.WellnessViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,20 +29,38 @@ fun OnboardingScreen(
     viewModel: WellnessViewModel,
     onComplete: () -> Unit
 ) {
+    val currentUserState by viewModel.user.collectAsState()
+    val fbUser = Firebase.auth.currentUser
+
+    val defaultDisplayName = fbUser?.displayName?.takeIf { it.isNotBlank() } ?: ""
+    val defaultEmailAddress = fbUser?.email?.takeIf { it.isNotBlank() } ?: ""
+
+    val initialName: String = if (!currentUserState?.fullName.isNullOrBlank() && currentUserState?.fullName != "John Doe") {
+        currentUserState?.fullName ?: ""
+    } else {
+        defaultDisplayName
+    }
+
+    val initialEmail: String = if (!currentUserState?.email.isNullOrBlank() && !currentUserState!!.email.contains("example.com") && !currentUserState!!.email.contains("wellness.org")) {
+        currentUserState?.email ?: ""
+    } else {
+        defaultEmailAddress
+    }
+
     var step by remember { mutableStateOf(0) }
 
-    // User Form State
-    var fullName by remember { mutableStateOf("John Doe") }
-    var email by remember { mutableStateOf("john.doe@wellness.org") }
-    var phone by remember { mutableStateOf("+1 (555) 234-5678") }
-    var dob by remember { mutableStateOf("1988-06-15") }
-    var gender by remember { mutableStateOf("Male") }
-    var bloodGroup by remember { mutableStateOf("O+") }
-    var height by remember { mutableStateOf("178") }
-    var weight by remember { mutableStateOf("74.5") }
-    var emergencyName by remember { mutableStateOf("Sarah Doe") }
-    var emergencyPhone by remember { mutableStateOf("+1 (555) 987-6543") }
-    var emergencyRel by remember { mutableStateOf("Spouse") }
+    // User Form State initialized with real account details
+    var fullName by remember(initialName) { mutableStateOf(initialName) }
+    var email by remember(initialEmail) { mutableStateOf(initialEmail) }
+    var phone by remember { mutableStateOf(currentUserState?.phone.orEmpty()) }
+    var dob by remember { mutableStateOf(currentUserState?.dateOfBirth.orEmpty().ifBlank { "1995-01-01" }) }
+    var gender by remember { mutableStateOf(currentUserState?.gender.orEmpty().ifBlank { "Prefer not to say" }) }
+    var bloodGroup by remember { mutableStateOf(currentUserState?.bloodGroup.orEmpty().ifBlank { "O+" }) }
+    var height by remember { mutableStateOf((currentUserState?.heightCm ?: 175f).toInt().toString()) }
+    var weight by remember { mutableStateOf((currentUserState?.weightKg ?: 70.0f).toString()) }
+    var emergencyName by remember { mutableStateOf(currentUserState?.emergencyContactName.orEmpty()) }
+    var emergencyPhone by remember { mutableStateOf(currentUserState?.emergencyContactPhone.orEmpty()) }
+    var emergencyRel by remember { mutableStateOf(currentUserState?.emergencyRelationship.orEmpty().ifBlank { "Family" }) }
 
     val focusOptions = listOf(
         "Medication management",

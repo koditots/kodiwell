@@ -1,0 +1,12 @@
+{
+  "versionCode": 1,
+  "versionName": "1.0.0",
+  "minSupportedVersion": 1,
+  "releaseDate": "2026-10-08",
+  "environment": "production",
+  "releaseTitle": "Kodi Wellness Production Launch v1.0.0",
+  "releaseNotes": "Official Production Release:\n• Full Room local database persistence for symptoms, medications, appointments, and vitals\n• Firebase Firestore cloud sync with europe-west1 zero-trust rules\n• Live in-app GitHub OTA updater for seamless updates\n• Health insurance card management with direct-dial support\n• Comprehensive AI Daily Planner with clinical safety guardrails",
+  "apkUrl": "https://github.com/kodi-wellness/app/releases/latest/download/app-release.apk",
+  "releaseUrl": "https://github.com/kodi-wellness/app/releases/latest",
+  "isMandatory": false
+}

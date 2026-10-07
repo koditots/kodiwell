@@ -110,22 +110,34 @@ fun EmergencyProfileScreen(
                         Text("Primary Emergency Contact", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(user?.emergencyContactName ?: "Sarah Doe", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
-                    Text("Relationship: ${user?.emergencyRelationship ?: "Spouse"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Phone: ${user?.emergencyContactPhone ?: "+1 (555) 987-6543"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                    val contactName = user?.emergencyContactName?.takeIf { it.isNotBlank() && it != "Sarah Doe" }
+                    val contactRel = user?.emergencyRelationship?.takeIf { it.isNotBlank() } ?: "Emergency Contact"
+                    val contactPhone = user?.emergencyContactPhone?.takeIf { it.isNotBlank() && !it.contains("555") }
+
+                    if (contactName != null) {
+                        Text(contactName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                        Text("Relationship: $contactRel", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (contactPhone != null) {
+                            Text("Phone: $contactPhone", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                        }
+                    } else {
+                        Text("Not configured yet", fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Add your emergency contact in Onboarding or Edit Profile.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
-                    FilledTonalButton(
-                        onClick = {
-                            val phone = user?.emergencyContactPhone ?: "+15559876543"
-                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Call Emergency Contact")
+                    if (!contactPhone.isNullOrBlank()) {
+                        FilledTonalButton(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${contactPhone.replace(" ", "")}"))
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Call Emergency Contact")
+                        }
                     }
                 }
             }

@@ -33,7 +33,8 @@ class GeminiService {
 
     suspend fun generateChatResponse(
         prompt: String,
-        conversationHistory: List<Pair<String, String>> = emptyList()
+        conversationHistory: List<Pair<String, String>> = emptyList(),
+        userName: String = ""
     ): Pair<String, Boolean> = withContext(Dispatchers.IO) {
         val hasEmergency = isEmergency(prompt)
 
@@ -42,7 +43,8 @@ class GeminiService {
             "If you or someone nearby is experiencing a life-threatening emergency, call **911** or your local emergency service immediately. Do NOT wait for an online response.\n\n"
         } else ""
 
-        val systemInstruction = "You are 'Wellness AI', a compassionate and knowledgeable personal medical assistant and wellness planner in Kodi Wellness. " +
+        val addressingPrompt = if (userName.isNotBlank()) " Address the user respectfully as $userName." else ""
+        val systemInstruction = "You are 'Wellness AI', a compassionate and knowledgeable personal medical assistant and wellness planner in Kodi Wellness.$addressingPrompt " +
                 "You provide evidence-based general wellness advice, sleep hygiene tips, nutrition guidance, and healthy lifestyle habits. " +
                 "STRICT SAFETY RULES: You must NEVER diagnose diseases, never prescribe drugs, never recommend changing medication dosages, and never tell users to stop prescribed medications. " +
                 "Always remind users that you provide general information only and they should consult a qualified doctor for medical diagnosis or treatment."

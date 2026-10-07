@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import com.example.kodiwellness.ui.WellnessViewModel
 import com.example.ui.theme.HealthGood
 import com.example.ui.theme.HealthWarning
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,10 +55,15 @@ fun GamificationScreen(
         BadgeInfo("movement_guru", "Movement Guru", "Logged 5 active workout or walking sessions", Icons.Default.DirectionsRun, false)
     )
 
+    val fbUser = com.google.firebase.Firebase.auth.currentUser
+    val myDisplayName = user?.fullName?.trim()?.takeIf { it.isNotBlank() && it != "John Doe" }
+        ?: fbUser?.displayName?.trim()?.takeIf { it.isNotBlank() }
+        ?: "You"
+
     val friendLeaderboard = listOf(
         LeaderboardEntry("1", "Sarah D.", 620, "Level 7", false),
         LeaderboardEntry("2", "Marcus K.", 490, "Level 5", false),
-        LeaderboardEntry("3", "${user?.fullName ?: "John Doe"} (You)", points, "Level $level", true),
+        LeaderboardEntry("3", "$myDisplayName (You)", points, "Level $level", true),
         LeaderboardEntry("4", "Emma R.", 310, "Level 3", false),
         LeaderboardEntry("5", "David L.", 280, "Level 3", false)
     )

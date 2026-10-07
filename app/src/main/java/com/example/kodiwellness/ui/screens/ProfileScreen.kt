@@ -25,7 +25,16 @@ import androidx.compose.ui.window.Dialog
 import com.example.kodiwellness.data.model.InsuranceInfoEntity
 import com.example.kodiwellness.data.model.UserEntity
 import com.example.kodiwellness.ui.WellnessViewModel
+import com.example.kodiwellness.ui.components.ConfigureRepoDialog
+import com.example.kodiwellness.ui.components.ProductionUpdateCard
+import com.example.kodiwellness.update.UpdateStatus
+import com.example.BuildConfig
 import com.example.ui.theme.HealthGood
+import androidx.credentials.CredentialManager
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +47,8 @@ fun ProfileScreen(
 ) {
     val user by viewModel.user.collectAsState()
     val insurance by viewModel.insuranceInfo.collectAsState()
+    val updateStatus by viewModel.updateStatus.collectAsState()
+    val currentRepo by viewModel.currentGitHubRepo.collectAsState()
     val context = LocalContext.current
 
     var showEditProfileDialog by remember { mutableStateOf(false) }
@@ -45,6 +56,7 @@ fun ProfileScreen(
     var showExportDialog by remember { mutableStateOf(false) }
     var showDisclaimerDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
+    var showConfigureRepoDialog by remember { mutableStateOf(false) }
 
     var notificationsEnabled by remember { mutableStateOf(true) }
     var vibrationEnabled by remember { mutableStateOf(true) }
@@ -77,6 +89,21 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val fbUser = com.google.firebase.Firebase.auth.currentUser
+                        val realName = user?.fullName?.trim()?.takeIf { it.isNotBlank() && it != "John Doe" }
+                            ?: fbUser?.displayName?.trim()?.takeIf { it.isNotBlank() }
+                            ?: "Kodi Member"
+                        val realEmail = user?.email?.trim()?.takeIf { it.isNotBlank() && !it.contains("example.com") && !it.contains("wellness.org") }
+                            ?: fbUser?.email?.trim()?.takeIf { it.isNotBlank() }
+                            ?: "Connected via Google"
+
+                        val initials = realName.split(" ")
+                            .filter { it.isNotBlank() }
+                            .take(2)
+                            .mapNotNull { it.firstOrNull()?.uppercase() }
+                            .joinToString("")
+                            .ifBlank { "KW" }
+
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
@@ -85,7 +112,7 @@ fun ProfileScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = user?.fullName?.take(2)?.uppercase() ?: "JD",
+                                text = initials,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -93,9 +120,9 @@ fun ProfileScreen(
                         }
                         Spacer(modifier = Modifier.width(14.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(user?.fullName ?: "John Doe", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                            Text(user?.email ?: "john.doe@wellness.org", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Blood Group: ${user?.bloodGroup ?: "O+"} • ${user?.weightKg ?: 74.5f} kg", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            Text(realName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Text(realEmail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Blood Group: ${user?.bloodGroup?.ifBlank { "O+" } ?: "O+"} • ${user?.weightKg ?: 70.0f} kg", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { showEditProfileDialog = true }) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit Profile")
@@ -241,7 +268,106 @@ fun ProfileScreen(
                 }
             }
 
+            // Firebase Cloud Connection Card
+            val firebaseUser = Firebase.auth.currentUser
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudDone,
+                                contentDescription = "Cloud Connected",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Firebase Cloud Connected",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                text = firebaseUser?.email ?: "Google Account Synced",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Database Region", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                            Text("europe-west1 (Encrypted)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                val coroutineScope = CoroutineScope(Dispatchers.Main)
+                                val credentialManager = CredentialManager.create(context)
+                                signOut(context, credentialManager, onSignOutComplete = {}, scope = coroutineScope)
+                            },
+                            modifier = Modifier.testTag("sign_out_button")
+                        ) {
+                            Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Sign Out")
+                        }
+                    }
+                }
+            }
+
+            // Production Release & GitHub Updates Card
+            ProductionUpdateCard(
+                currentVersion = BuildConfig.VERSION_NAME,
+                currentRepo = currentRepo,
+                updateStatus = updateStatus,
+                onCheckForUpdates = { viewModel.checkForUpdates(manual = true) },
+                onDownloadUpdate = { release -> viewModel.downloadUpdate(release) },
+                onInstallUpdate = {
+                    (updateStatus as? UpdateStatus.ReadyToInstall)?.let {
+                        viewModel.installDownloadedUpdate(it.apkFile)
+                    }
+                },
+                onOpenBrowser = { url -> viewModel.openUpdateInBrowser(url) },
+                onEditRepo = { showConfigureRepoDialog = true }
+            )
+
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        // Configure GitHub Repository Dialog
+        if (showConfigureRepoDialog) {
+            ConfigureRepoDialog(
+                initialRepo = currentRepo,
+                onDismiss = { showConfigureRepoDialog = false },
+                onSave = { newRepo ->
+                    viewModel.setGitHubRepo(newRepo)
+                    showConfigureRepoDialog = false
+                }
+            )
         }
 
         // Edit Profile Dialog
@@ -349,10 +475,16 @@ private fun ProfileMenuRow(icon: androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 private fun EditProfileDialog(currentUser: UserEntity, onDismiss: () -> Unit, onSave: (UserEntity) -> Unit) {
-    var name by remember { mutableStateOf(currentUser.fullName) }
-    var email by remember { mutableStateOf(currentUser.email) }
+    val fbUser = com.google.firebase.Firebase.auth.currentUser
+    val defaultName = currentUser.fullName.takeIf { it.isNotBlank() && it != "John Doe" }
+        ?: fbUser?.displayName.orEmpty()
+    val defaultEmail = currentUser.email.takeIf { it.isNotBlank() && !it.contains("example.com") && !it.contains("wellness.org") }
+        ?: fbUser?.email.orEmpty()
+
+    var name by remember { mutableStateOf(defaultName) }
+    var email by remember { mutableStateOf(defaultEmail) }
     var phone by remember { mutableStateOf(currentUser.phone) }
-    var blood by remember { mutableStateOf(currentUser.bloodGroup) }
+    var blood by remember { mutableStateOf(currentUser.bloodGroup.ifBlank { "O+" }) }
     var allergies by remember { mutableStateOf(currentUser.allergies) }
     var conditions by remember { mutableStateOf(currentUser.medicalConditions) }
     var doctor by remember { mutableStateOf(currentUser.primaryDoctor) }
@@ -373,7 +505,15 @@ private fun EditProfileDialog(currentUser: UserEntity, onDismiss: () -> Unit, on
                     TextButton(onClick = onDismiss) { Text("Cancel") }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(onClick = {
-                        onSave(currentUser.copy(fullName = name, email = email, phone = phone, bloodGroup = blood, allergies = allergies, medicalConditions = conditions, primaryDoctor = doctor))
+                        onSave(currentUser.copy(
+                            fullName = name.trim(),
+                            email = email.trim(),
+                            phone = phone.trim(),
+                            bloodGroup = blood.trim(),
+                            allergies = allergies.trim(),
+                            medicalConditions = conditions.trim(),
+                            primaryDoctor = doctor.trim()
+                        ))
                     }) {
                         Text("Save")
                     }

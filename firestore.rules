@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId == request.auth.uid &&
+        (!('displayName' in data) || data.displayName is string) &&
+        (!('email' in data) || data.email is string) &&
+        (!('insuranceProvider' in data) || data.insuranceProvider is string) &&
+        (!('policyNumber' in data) || data.policyNumber is string) &&
+        (!('groupNumber' in data) || data.groupNumber is string) &&
+        (!('insuranceContact' in data) || data.insuranceContact is string) &&
+        (!('subscriberName' in data) || data.subscriberName is string) &&
+        (!('planType' in data) || data.planType is string) &&
+        (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidSymptomLog(data) {
+      return data.userId == request.auth.uid &&
+        data.symptom is string && data.symptom.size() > 0 &&
+        data.severity is number && data.severity >= 1 && data.severity <= 10 &&
+        (!('notes' in data) || data.notes is string) &&
+        (!('triggers' in data) || data.triggers is string) &&
+        (!('loggedAt' in data) || data.loggedAt is string) &&
+        (!('createdAt' in data) || (data.createdAt is timestamp && data.createdAt <= request.time));
+    }
+
+    function isValidMedication(data) {
+      return data.userId == request.auth.uid &&
+        data.name is string && data.name.size() > 0 &&
+        data.dosage is string &&
+        (!('frequency' in data) || data.frequency is string) &&
+        (!('timesPerDay' in data) || data.timesPerDay is number) &&
+        (!('instructions' in data) || data.instructions is string) &&
+        (!('active' in data) || data.active is bool) &&
+        (!('createdAt' in data) || (data.createdAt is timestamp && data.createdAt <= request.time));
+    }
+
+    match /users/{userId} {
+      allow read, delete: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+
+      match /symptoms/{symptomId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidSymptomLog(request.resource.data);
+      }
+
+      match /medications/{medicationId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidMedication(request.resource.data);
+      }
+    }
+  }
+}
