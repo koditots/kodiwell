@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <group
+        android:pivotX="100"
+        android:pivotY="80">
+
+        <!-- Human Figure Head (Vibrant Blue) -->
+        <path
+            android:fillColor="#0284C7"
+            android:pathData="M100,32m-16,0a16,16 0 1,1 32,0a16,16 0 1,1 -32,0" />
+
+        <!-- Human Figure Body & Raised Arms (Blue) -->
+        <path
+            android:fillColor="#0284C7"
+            android:pathData="M100,58 C91,58 70,45 52,42 C60,57 74,68 82,76 L82,102 C82,106 91,110 100,110 C109,110 118,106 118,102 L118,76 C126,68 140,57 148,42 C130,45 109,58 100,58 Z" />
+
+        <!-- Left Leaf (Lush Vibrant Green Outer & Inner) -->
+        <path
+            android:fillColor="#16A34A"
+            android:pathData="M44,46 C44,46 40,94 80,116 C94,124 98,126 100,126 C76,120 42,100 44,46 Z" />
+        <path
+            android:fillColor="#22C55E"
+            android:pathData="M44,46 C62,56 82,78 84,100 C68,96 50,76 44,46 Z" />
+
+        <!-- Right Leaf (Vibrant Green) -->
+        <path
+            android:fillColor="#16A34A"
+            android:pathData="M156,46 C156,46 160,94 120,116 C106,124 102,126 100,126 C124,120 158,100 156,46 Z" />
+        <path
+            android:fillColor="#22C55E"
+            android:pathData="M156,46 C138,56 118,78 116,100 C132,96 150,76 156,46 Z" />
+
+        <!-- Stethoscope Cord (Loop on Right Leaf) -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:fillColor="#00000000"
+            android:pathData="M102,118 C116,114 135,106 140,94 C143,86 135,78 126,80 C120,82 122,96 134,96 L144,96" />
+
+        <!-- Stethoscope Chestpiece (Bell) -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M145,96m-7.5,0a7.5,7.5 0 1,1 15,0a7.5,7.5 0 1,1 -15,0" />
+        <path
+            android:fillColor="#16A34A"
+            android:pathData="M145,96m-4,0a4,4 0 1,1 8,0a4,4 0 1,1 -8,0" />
+
+    </group>
+</vector>

@@ -1,0 +1,7 @@
+{
+  "name": "Kodi Wellness",
+  "description": "Personal medical assistance and wellness planning app designed to help users manage everyday health, medications, appointments, symptoms, and wellness activities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

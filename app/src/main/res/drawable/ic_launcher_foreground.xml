@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Group centered at (54, 54) -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54">
+
+        <!-- Human Figure Head (Blue) -->
+        <path
+            android:fillColor="#0284C7"
+            android:pathData="M54,29m-6.5,0a6.5,6.5 0 1,1 13,0a6.5,6.5 0 1,1 -13,0" />
+
+        <!-- Human Figure Body & Raised Arms (Vibrant Blue) -->
+        <path
+            android:fillColor="#0284C7"
+            android:pathData="M54,41 C50.5,41 42,35.5 35,34 C38.5,40.5 44,45 47,48.5 L47,59 C47,60.5 50.5,62.5 54,62.5 C57.5,62.5 61,60.5 61,59 L61,48.5 C64,45 69.5,40.5 73,34 C66,35.5 57.5,41 54,41 Z" />
+
+        <!-- Left Leaf (Lush Vibrant Green) -->
+        <path
+            android:fillColor="#16A34A"
+            android:pathData="M31.5,36 C31.5,36 30,55 45,63.5 C51,67 53,68 54,68 C44,65 31,56 31.5,36 Z" />
+        <path
+            android:fillColor="#22C55E"
+            android:pathData="M31.5,36 C39,40 47,49 48,58 C41,56 34,48 31.5,36 Z" />
+
+        <!-- Right Leaf (Vibrant Green with Stethoscope integration) -->
+        <path
+            android:fillColor="#16A34A"
+            android:pathData="M76.5,36 C76.5,36 78,55 63,63.5 C57,67 55,68 54,68 C64,65 77,56 76.5,36 Z" />
+        <path
+            android:fillColor="#22C55E"
+            android:pathData="M76.5,36 C69,40 61,49 60,58 C67,56 74,48 76.5,36 Z" />
+
+        <!-- Stethoscope Cord (Clean White loop on Right Leaf) -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2.2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:fillColor="#00000000"
+            android:pathData="M55,65 C60,63 68,60 70,55 C71,51.5 68,48 65,49 C62,50 63,56 68,56 L72,56" />
+
+        <!-- Stethoscope Chestpiece (Bell) -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M73,56m-3.2,0a3.2,3.2 0 1,1 6.4,0a3.2,3.2 0 1,1 -6.4,0" />
+        <path
+            android:fillColor="#16A34A"
+            android:pathData="M73,56m-1.5,0a1.5,1.5 0 1,1 3,0a1.5,1.5 0 1,1 -3,0" />
+
+    </group>
+</vector>
